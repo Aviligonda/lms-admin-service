@@ -5,6 +5,7 @@ import com.bridgelabz.lmsadminservice.exception.CustomException;
 import com.bridgelabz.lmsadminservice.exception.LMSException;
 import com.bridgelabz.lmsadminservice.model.AdminModel;
 import com.bridgelabz.lmsadminservice.repository.AdminRepository;
+import com.bridgelabz.lmsadminservice.util.Response;
 import com.bridgelabz.lmsadminservice.util.ResponseClass;
 import com.bridgelabz.lmsadminservice.util.TokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +30,14 @@ public class AdminService implements IAdminService {
      * @Param :  adminDTO
      * */
     @Override
-    public AdminModel addAdmin(AdminDTO adminDTO) {
+    public Response addAdmin(AdminDTO adminDTO) {
         AdminModel adminModel = new AdminModel(adminDTO);
         adminModel.setCreatedTime(LocalDateTime.now());
         adminRepository.save(adminModel);
         String body = "Admin Added With Id is : " + adminModel.getId();
         String subject = "Admin Registration Successfully ...";
         mailService.send(adminModel.getEmailId(), body, subject);
-        return adminModel;
+        return new Response(200, "Success", adminModel);
     }
 
     /*
@@ -65,7 +66,7 @@ public class AdminService implements IAdminService {
      * @Param :  token,id and adminDTO
      * */
     @Override
-    public AdminModel updateAdminDetails(Long id, String token, AdminDTO adminDTO) {
+    public Response updateAdminDetails(Long id, String token, AdminDTO adminDTO) {
         Long userId = tokenUtil.decodeToken(token);
         Optional<AdminModel> isIdPresent = adminRepository.findById(userId);
         if (isIdPresent.isPresent()) {
@@ -78,10 +79,11 @@ public class AdminService implements IAdminService {
                 isAdminPresent.get().setPassword(adminDTO.getPassword());
                 isAdminPresent.get().setStatus(adminDTO.getStatus());
                 isAdminPresent.get().setUpdatedTime(LocalDateTime.now());
+                adminRepository.save(isAdminPresent.get());
                 String body = "Admin Updated With Id is : " + isAdminPresent.get().getId();
                 String subject = "Admin Details Updated Successfully ...";
                 mailService.send(isAdminPresent.get().getEmailId(), body, subject);
-                adminRepository.save(isAdminPresent.get());
+                return new Response(200, "Success", isAdminPresent.get());
             } else {
                 throw new LMSException(400, "No Admin found with this ID");
             }
@@ -96,7 +98,7 @@ public class AdminService implements IAdminService {
      * */
 
     @Override
-    public AdminModel deleteAdminDetails(Long id, String token) {
+    public Response deleteAdminDetails(Long id, String token) {
         Long userId = tokenUtil.decodeToken(token);
         Optional<AdminModel> isIdPresent = adminRepository.findById(userId);
         if (isIdPresent.isPresent()) {
@@ -106,7 +108,7 @@ public class AdminService implements IAdminService {
                 String body = "Admin Details Deleted With Id is : " + isAdminPresent.get().getId();
                 String subject = "Admin Details Deleted Successfully ...";
                 mailService.send(isAdminPresent.get().getEmailId(), body, subject);
-                return isAdminPresent.get();
+                return new Response(200, "Success", isAdminPresent.get());
             } else {
                 throw new LMSException(400, "No Admin found with this ID");
             }
@@ -139,13 +141,13 @@ public class AdminService implements IAdminService {
      * @Param :  token and password
      * */
     @Override
-    public AdminModel updatePassword(String token, String password) {
+    public Response updatePassword(String token, String password) {
         Long userId = tokenUtil.decodeToken(token);
         Optional<AdminModel> isIdPresent = adminRepository.findById(userId);
         if (isIdPresent.isPresent()) {
             isIdPresent.get().setPassword(password);
             adminRepository.save(isIdPresent.get());
-            return isIdPresent.get();
+            return new Response(200, "Success", isIdPresent.get());
         } else {
             throw new LMSException(400, "Token is Wrong");
         }
@@ -157,7 +159,7 @@ public class AdminService implements IAdminService {
      * @Param :  emailId
      * */
     @Override
-    public CustomException resetPassword(String emailId) {
+    public Response resetPassword(String emailId) {
         Optional<AdminModel> isEmailPresent = adminRepository.findByEmailId(emailId);
         if (isEmailPresent.isPresent()) {
             String token = tokenUtil.createToken(isEmailPresent.get().getId());
@@ -165,7 +167,7 @@ public class AdminService implements IAdminService {
             String subject = "Reset Password";
             String body = " Reset password Use this link \n" + url + "\n Use this token to reset \n" + token;
             mailService.send(isEmailPresent.get().getEmailId(), body, subject);
-            return new CustomException(200, "Check your mail ");
+            return new Response(200, "Success", isEmailPresent.get());
         }
         throw new LMSException(400, "Email is not found");
     }
@@ -176,13 +178,27 @@ public class AdminService implements IAdminService {
      * @Param :  token,id and profilePath
      * */
     @Override
-    public AdminModel addProfile(Long id, String profilePath, String token) {
+    public Response addProfile(Long id, String profilePath, String token) {
         Optional<AdminModel> isIdPresent = adminRepository.findById(id);
         if (isIdPresent.isPresent()) {
             isIdPresent.get().setProfilePath(profilePath);
-            return isIdPresent.get();
+            return new Response(200, "Success", isIdPresent.get());
         } else {
             throw new LMSException(400, "Admin Not found with this id");
         }
+    }
+    /*
+     * Purpose : Implement the Logic of Validating Token
+     * @author : Aviligonda Sreenivasulu
+     * @Param :  token
+     * */
+    @Override
+    public Boolean validate(String token) {
+        Long userId = tokenUtil.decodeToken(token);
+        Optional<AdminModel> isUserPresent = adminRepository.findById(userId);
+        if (isUserPresent.isPresent()) {
+            return true;
+        }
+        return false;
     }
 }

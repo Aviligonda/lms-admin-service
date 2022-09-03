@@ -4,8 +4,11 @@ import com.bridgelabz.lmsadminservice.dto.AdminDTO;
 import com.bridgelabz.lmsadminservice.exception.CustomException;
 import com.bridgelabz.lmsadminservice.model.AdminModel;
 import com.bridgelabz.lmsadminservice.service.IAdminService;
+import com.bridgelabz.lmsadminservice.util.Response;
 import com.bridgelabz.lmsadminservice.util.ResponseClass;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -23,8 +26,9 @@ public class AdminController {
      * @Param : adminDTO
      * */
     @PostMapping("/addAdmin")
-    public AdminModel addAdmin(@Valid @RequestBody AdminDTO adminDTO) {
-        return adminService.addAdmin(adminDTO);
+    public ResponseEntity<Response> addAdmin(@Valid @RequestBody AdminDTO adminDTO) {
+        Response response = adminService.addAdmin(adminDTO);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /*
@@ -33,8 +37,10 @@ public class AdminController {
      * @Param : token
      * */
     @GetMapping("/getAllAdmins")
-    public List<AdminModel> getAllAdmins(@RequestHeader String token) {
-        return adminService.getAllAdmins(token);
+    public ResponseEntity<List<?>> getAllAdmins(@RequestHeader String token) {
+        List<AdminModel> response =adminService.getAllAdmins(token);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     /*
@@ -43,10 +49,11 @@ public class AdminController {
      * @Param :  token,adminDTO and id
      * */
     @PutMapping("/updateAdminDetails/{id}")
-    public AdminModel updateDetails(@RequestHeader String token,
-                                    @Valid @RequestBody AdminDTO adminDTO,
-                                    @PathVariable Long id) {
-        return adminService.updateAdminDetails(id, token, adminDTO);
+    public ResponseEntity<Response> updateDetails(@RequestHeader String token,
+                                                  @Valid @RequestBody AdminDTO adminDTO,
+                                                  @PathVariable Long id) {
+        Response response = adminService.updateAdminDetails(id, token, adminDTO);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /*
@@ -55,9 +62,10 @@ public class AdminController {
      * @Param : token and id
      * */
     @DeleteMapping("/deleteAdminDetails/{id}")
-    public AdminModel deleteAdminDetails(@PathVariable Long id,
-                                         @RequestHeader String token) {
-        return adminService.deleteAdminDetails(id, token);
+    public ResponseEntity<Response> deleteAdminDetails(@PathVariable Long id,
+                                                       @RequestHeader String token) {
+        Response response = adminService.deleteAdminDetails(id, token);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /*
@@ -66,9 +74,10 @@ public class AdminController {
      * @Param : emailId and password
      * */
     @PostMapping("/loginAdmin")
-    public ResponseClass loginAdmin(@RequestParam String emailId,
-                                    @RequestParam String password) {
-        return adminService.loginAdmin(emailId, password);
+    public ResponseEntity<ResponseClass> loginAdmin(@RequestParam String emailId,
+                                                    @RequestParam String password) {
+        ResponseClass responseClass = adminService.loginAdmin(emailId, password);
+        return new ResponseEntity<>(responseClass, HttpStatus.OK);
     }
 
     /*
@@ -77,9 +86,11 @@ public class AdminController {
      * @Param : token and password
      * */
     @PutMapping("/updatePassword")
-    public AdminModel updatePassword(@RequestHeader String token,
-                                     @RequestParam String password) {
-        return adminService.updatePassword(token, password);
+    public ResponseEntity<Response> updatePassword(@RequestHeader String token,
+                                                   @RequestParam String password) {
+        Response response = adminService.updatePassword(token, password);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     /*
@@ -88,8 +99,10 @@ public class AdminController {
      * @Param : emailId
      * */
     @PutMapping("/resetPassword")
-    public CustomException resetPassword(@RequestParam String emailId) {
-        return adminService.resetPassword(emailId);
+    public ResponseEntity<Response> resetPassword(@RequestParam String emailId) {
+        Response response = adminService.resetPassword(emailId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+
     }
 
     /*
@@ -98,10 +111,17 @@ public class AdminController {
      * @Param :  profilePath,id and token
      * */
     @PostMapping("/addProfilePath")
-    public AdminModel addProfilePath(@RequestParam Long id,
+    public ResponseEntity<Response> addProfilePath(@RequestParam Long id,
                                      @RequestHeader String token,
                                      @RequestParam String profilePath) {
-        return adminService.addProfile(id, profilePath, token);
+        Response response= adminService.addProfile(id, profilePath, token);
+        return new ResponseEntity<>(response,HttpStatus.OK);
     }
+
+    @GetMapping("/validate/{token}")
+    public Boolean validate(@PathVariable String token) {
+        return adminService.validate(token);
+    }
+
 }
 
